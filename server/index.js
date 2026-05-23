@@ -1,3 +1,5 @@
+require('dotenv').config()
+const mongoose = require('mongoose')
 const express = require('express')
 const multer = require('multer')
 const path = require('path')
@@ -18,6 +20,11 @@ const storage = multer.diskStorage({
 })
 
 const upload = multer({ storage })
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch((error) => console.log(error))
 
 // Test route
 app.get('/', (req, res) => {
