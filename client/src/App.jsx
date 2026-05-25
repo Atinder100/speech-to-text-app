@@ -1,12 +1,41 @@
-import { useState} from 'react'
+import {
+  useState,
+  useRef,
+  useEffect,
+} from 'react'
+import { io } from 'socket.io-client'
 import axios from 'axios'
 import { FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa'
+
+const socket = io('http://localhost:5000')
 
 function App() {
   const [audio, setAudio] = useState(null)
   const [transcription, setTranscription] = useState('')
   const [loading, setLoading] = useState(false)
   const [micOn, setMicOn] = useState(false)
+  const mediaRecorderRef = useRef(null)
+
+  useEffect(() => {
+
+  
+
+  return () => {
+
+    socket.off('transcription-result')
+  }
+
+}, [])
+
+  socket.on(
+  'transcription-result',
+  (text) => {
+
+    setTranscription((prev) =>
+      prev + ' ' + text
+    )
+  }
+)
   
 
   // Upload selected file
@@ -35,6 +64,67 @@ function App() {
       setLoading(false)
     }
   }
+
+  const toggleMic = async () => {
+
+  // TURN MIC ON
+  if (!micOn) {
+
+    setTranscription('')
+
+
+    try {
+
+      const stream =
+        await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        })
+
+      const mediaRecorder =
+        new MediaRecorder(stream, {
+          mimeType: 'audio/webm',
+        })
+
+      mediaRecorderRef.current = mediaRecorder
+
+      mediaRecorder.ondataavailable = (
+        event
+      ) => {
+
+        if (event.data.size > 0) {
+
+          socket.emit(
+            'audio-chunk',
+            event.data
+          )
+        }
+      }
+
+      mediaRecorder.start(250)
+
+      setTranscription('')
+
+      setMicOn(true)
+
+    } catch (error) {
+
+      console.log(error)
+
+      alert('Microphone access denied')
+    }
+
+  }
+
+  // TURN MIC OFF
+  else {
+
+    mediaRecorderRef.current.stop()
+
+    socket.emit('stop-stream')
+
+    setMicOn(false)
+  }
+}
 
   
 
@@ -73,7 +163,7 @@ function App() {
               ? 'bg-blue-600 text-white'
               : 'bg-gray-200 text-gray-800'
           }`}
-          onClick={() => setMicOn(!micOn)}
+          onClick={toggleMic}
         >
           {micOn ? (
             <FaMicrophone />
