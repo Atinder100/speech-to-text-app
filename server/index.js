@@ -188,6 +188,36 @@ app.get(
   }
 )
 
+app.delete(
+  '/transcriptions/:id',
+
+  async (req, res) => {
+
+    try {
+
+      await Transcription.findByIdAndDelete(
+        req.params.id
+      )
+
+      res.status(200).json({
+
+        message:
+          'Deleted successfully',
+      })
+
+    } catch (error) {
+
+      console.log(error)
+
+      res.status(500).json({
+
+        error:
+          'Delete failed',
+      })
+    }
+  }
+)
+
 // ======================
 // SOCKET.IO SERVER
 // ======================
@@ -216,6 +246,8 @@ io.on(
       'User connected'
     )
 
+    let fullTranscript = ''
+
     // CREATE DEEPGRAM WEBSOCKET
     const deepgramLive =
       new WebSocket(
@@ -224,7 +256,6 @@ io.on(
 
         {
           headers: {
-
             Authorization:
               `Token ${process.env.DEEPGRAM_API_KEY}`,
           },
@@ -272,35 +303,19 @@ io.on(
               transcript
             )
 
-            // SEND TO FRONTEND
+            // SHOW LIVE TEXT
             socket.emit(
               'transcription-result',
               transcript
             )
 
-            // SAVE FINAL RESULT
+            // STORE IN MEMORY
             if (
               response.is_final
             ) {
 
-              try {
-
-                await Transcription.create({
-
-                  fileName:
-                    'Live Mic',
-
-                  transcription:
-                    transcript,
-                })
-
-              } catch (error) {
-
-                console.log(
-                  'Mongo Save Error:',
-                  error.message
-                )
-              }
+              fullTranscript +=
+                ' ' + transcript
             }
           }
 
@@ -325,6 +340,12 @@ io.on(
           deepgramLive.send(
             chunk
           )
+
+        } else {
+
+          console.log(
+            'Deepgram not ready yet'
+          )
         }
       }
     )
@@ -333,11 +354,40 @@ io.on(
     socket.on(
       'stop-stream',
 
-      () => {
+      async () => {
 
         console.log(
           'Mic stopped'
         )
+
+        // SAVE ONE COMPLETE TRANSCRIPT
+        if (
+          fullTranscript.trim() !== ''
+        ) {
+
+          try {
+
+            await Transcription.create({
+
+              fileName:
+                'Live Mic',
+
+              transcription:
+                fullTranscript.trim(),
+            })
+
+            console.log(
+              'Saved complete transcription'
+            )
+
+          } catch (error) {
+
+            console.log(
+              'Mongo Save Error:',
+              error.message
+            )
+          }
+        }
 
         if (
           deepgramLive.readyState ===
@@ -349,7 +399,7 @@ io.on(
       }
     )
 
-    // USER DISCONNECT
+    // DISCONNECT
     socket.on(
       'disconnect',
 
@@ -370,7 +420,6 @@ io.on(
     )
   }
 )
-
 // ======================
 // START SERVER
 // ======================
