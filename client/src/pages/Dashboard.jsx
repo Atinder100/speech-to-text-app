@@ -17,7 +17,7 @@ import {
 
 function Dashboard() {
 
-  const socketRef = useRef(null)
+  
 
   const [audio, setAudio] =
     useState(null)
@@ -37,22 +37,54 @@ function Dashboard() {
   const mediaRecorderRef =
     useRef(null)
 
-  // SOCKET + HISTORY
-  useEffect(() => {
+  const socketRef = useRef(null)
 
+  // SOCKET + HISTORY
+ useEffect(() => {
+
+  // CREATE SOCKET CONNECTION
   socketRef.current =
     io('http://localhost:5000')
 
+  // LIVE TRANSCRIPTION
   socketRef.current.on(
     'transcription-result',
+
     (text) => {
 
       setTranscription((prev) => {
+
         return prev + ' ' + text
       })
     }
   )
 
+  // DEEPGRAM READY
+socketRef.current.on(
+  'deepgram-ready',
+
+  () => {
+
+    console.log(
+      'Deepgram ready'
+    )
+
+    // START RECORDING NOW
+    if (
+      mediaRecorderRef.current
+      &&
+      mediaRecorderRef.current.state ===
+        'inactive'
+    ) {
+
+      mediaRecorderRef.current.start(
+        250
+      )
+    }
+  }
+)
+
+  // FETCH HISTORY
   const fetchHistory = async () => {
 
     try {
@@ -73,6 +105,10 @@ function Dashboard() {
   fetchHistory()
 
   return () => {
+
+    socketRef.current.off(
+      'transcription-result'
+    )
 
     socketRef.current.disconnect()
   }
@@ -155,7 +191,11 @@ function Dashboard() {
           await navigator
             .mediaDevices
             .getUserMedia({
-              audio: true,
+              audio: {
+                noiseSuppression: true,
+                echoCancellation: true,
+                autoGainControl: true,
+              },
             })
 
         const mediaRecorder =
@@ -170,34 +210,32 @@ function Dashboard() {
         mediaRecorderRef.current =
           mediaRecorder
 
+          // SEND AUDIO CHUNKS
+          mediaRecorder.ondataavailable =
+            async (event) => {
+
+              if (
+                event.data.size > 0
+              ) {
+
+                const arrayBuffer =
+                  await event.data
+                    .arrayBuffer()
+
+                socketRef.current.emit(
+                  'audio-chunk',
+                  arrayBuffer
+                )
+              }
+            }
+
         socketRef.current.emit(
   'start-stream'
 )
 
-// WAIT FOR DEEPGRAM CONNECTION
-setTimeout(() => {
 
-  mediaRecorder.ondataavailable =
-    async (event) => {
 
-      if (
-        event.data.size > 0
-      ) {
 
-        const arrayBuffer =
-          await event.data
-            .arrayBuffer()
-
-        socketRef.current.emit(
-          'audio-chunk',
-          arrayBuffer
-        )
-      }
-    }
-
-  mediaRecorder.start(1000)
-
-}, 1500)
 
         setMicOn(true)
 
@@ -215,6 +253,12 @@ setTimeout(() => {
     else {
 
       mediaRecorderRef.current.stop()
+
+      mediaRecorderRef.current.stream
+        .getTracks()
+        .forEach((track) =>
+          track.stop()
+        )
 
       socketRef.current.emit(
         'stop-stream'

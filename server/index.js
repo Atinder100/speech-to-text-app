@@ -246,95 +246,145 @@ io.on(
       'User connected'
     )
 
+    let deepgramLive = null
+
     let fullTranscript = ''
 
-    // CREATE DEEPGRAM WEBSOCKET
-    const deepgramLive =
-      new WebSocket(
+    // ======================
+    // START STREAM
+    // ======================
 
-        'wss://api.deepgram.com/v1/listen?model=nova-2&language=en&punctuate=true&interim_results=true',
-
-        {
-          headers: {
-            Authorization:
-              `Token ${process.env.DEEPGRAM_API_KEY}`,
-          },
-        }
-      )
-
-    // DEEPGRAM CONNECTED
-    deepgramLive.on(
-      'open',
+    socket.on(
+      'start-stream',
 
       () => {
 
-        console.log(
-          'Deepgram connected'
+        fullTranscript = ''
+
+        // CREATE NEW DEEPGRAM CONNECTION
+        deepgramLive =
+          new WebSocket(
+            'wss://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&punctuate=true&interim_results=true&language=en-IN',
+
+            {
+              headers: {
+                Authorization:
+                  `Token ${process.env.DEEPGRAM_API_KEY}`,
+              },
+            }
+          )
+
+        
+        // DEEPGRAM CONNECTED
+          deepgramLive.on(
+            'open',
+
+            () => {
+
+              console.log(
+                'Deepgram connected'
+              )
+
+              // TELL FRONTEND READY
+              socket.emit(
+                'deepgram-ready'
+              )
+            }
+          )
+
+        // RECEIVE TRANSCRIPT
+        deepgramLive.on(
+          'message',
+
+          async (data) => {
+
+            try {
+
+              const response =
+                JSON.parse(
+                  data.toString()
+                )
+
+              const transcript =
+                response.channel
+                  ?.alternatives?.[0]
+                  ?.transcript
+
+              // IGNORE EMPTY
+              if (
+                transcript &&
+                transcript.trim() !== '' &&
+                response.is_final
+              ) {
+
+                console.log(
+                  'Transcript:',
+                  transcript
+                )
+
+                // SEND TO FRONTEND
+                socket.emit(
+                  'transcription-result',
+                  transcript
+                )
+
+                // SAVE FINAL TEXT
+                if (
+                  response.is_final
+                ) {
+
+                  fullTranscript +=
+                    ' ' + transcript
+                }
+              }
+
+            } catch (error) {
+
+              console.log(error)
+            }
+          }
+        )
+
+        // ERROR
+        deepgramLive.on(
+          'error',
+
+          (error) => {
+
+            console.log(
+              'Deepgram Error:',
+              error.message
+            )
+          }
+        )
+
+        // CLOSE
+        deepgramLive.on(
+          'close',
+
+          () => {
+
+            console.log(
+              'Deepgram closed'
+            )
+          }
         )
       }
     )
 
-    // RECEIVE TRANSCRIPT
-    deepgramLive.on(
-      'message',
-
-      async (data) => {
-
-        try {
-
-          const response =
-            JSON.parse(
-              data.toString()
-            )
-
-          const transcript =
-            response.channel
-              ?.alternatives?.[0]
-              ?.transcript
-
-          // IGNORE EMPTY
-          if (
-            transcript &&
-            transcript.trim() !== ''
-          ) {
-
-            console.log(
-              'Transcript:',
-              transcript
-            )
-
-            // SHOW LIVE TEXT
-            socket.emit(
-              'transcription-result',
-              transcript
-            )
-
-            // STORE IN MEMORY
-            if (
-              response.is_final
-            ) {
-
-              fullTranscript +=
-                ' ' + transcript
-            }
-          }
-
-        } catch (error) {
-
-          console.log(error)
-        }
-      }
-    )
-
+    // ======================
     // RECEIVE AUDIO CHUNKS
+    // ======================
+
     socket.on(
       'audio-chunk',
 
       (chunk) => {
 
         if (
+          deepgramLive &&
           deepgramLive.readyState ===
-          WebSocket.OPEN
+            WebSocket.OPEN
         ) {
 
           deepgramLive.send(
@@ -350,7 +400,10 @@ io.on(
       }
     )
 
-    // STOP MIC
+    // ======================
+    // STOP STREAM
+    // ======================
+
     socket.on(
       'stop-stream',
 
@@ -360,7 +413,7 @@ io.on(
           'Mic stopped'
         )
 
-        // SAVE ONE COMPLETE TRANSCRIPT
+        // SAVE TRANSCRIPT
         if (
           fullTranscript.trim() !== ''
         ) {
@@ -389,9 +442,11 @@ io.on(
           }
         }
 
+        // CLOSE DEEPGRAM
         if (
+          deepgramLive &&
           deepgramLive.readyState ===
-          WebSocket.OPEN
+            WebSocket.OPEN
         ) {
 
           deepgramLive.close()
@@ -399,7 +454,10 @@ io.on(
       }
     )
 
+    // ======================
     // DISCONNECT
+    // ======================
+
     socket.on(
       'disconnect',
 
@@ -410,8 +468,9 @@ io.on(
         )
 
         if (
+          deepgramLive &&
           deepgramLive.readyState ===
-          WebSocket.OPEN
+            WebSocket.OPEN
         ) {
 
           deepgramLive.close()
