@@ -14,6 +14,10 @@ import Home from './pages/Home.jsx'
 
 import Dashboard from './pages/Dashboard.jsx'
 
+import Register from './pages/Register.jsx'
+
+import Login from './pages/Login.jsx'
+
 createRoot(
   document.getElementById('root')
 ).render(
@@ -27,6 +31,16 @@ createRoot(
         <Route
           path="/"
           element={<Home />}
+        />
+
+        <Route
+          path="/register"
+          element={<Register />}
+        />
+
+        <Route
+          path="/login"
+          element={<Login />}
         />
 
         <Route

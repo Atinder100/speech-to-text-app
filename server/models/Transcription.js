@@ -1,24 +1,36 @@
-const mongoose = require('mongoose')
+const mongoose =
+  require('mongoose')
 
 const transcriptionSchema =
-  new mongoose.Schema(
-    {
-      fileName: {
-        type: String,
-        default: 'Live Mic',
-      },
+  new mongoose.Schema({
 
-      transcription: {
-        type: String,
-        required: true,
-      },
+    userId: {
+
+      type:
+        mongoose.Schema.Types.ObjectId,
+
+      ref: 'User',
+
+      required: true,
     },
-    {
-      timestamps: true,
-    }
-  )
 
-module.exports = mongoose.model(
-  'Transcription',
-  transcriptionSchema
-)
+    fileName: {
+      type: String,
+      required: true,
+    },
+
+    transcription: {
+      type: String,
+      required: true,
+    },
+
+  }, {
+
+    timestamps: true,
+  })
+
+module.exports =
+  mongoose.model(
+    'Transcription',
+    transcriptionSchema
+  )

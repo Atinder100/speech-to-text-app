@@ -31,11 +31,14 @@ function Home() {
 
             </button>
 
-            <button className="px-6 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:scale-105 transition shadow-lg">
+            <Link
+              to="/login"
+              className="px-6 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:scale-105 transition shadow-lg"
+            >
 
               Log In
 
-            </button>
+            </Link>
 
           </div>
 
@@ -79,7 +82,7 @@ function Home() {
           <div className="mt-12">
 
             <Link
-              to="/dashboard"
+              to="/register"
               className="inline-block px-10 py-5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-lg shadow-2xl hover:scale-105 transition-all duration-300"
             >
 

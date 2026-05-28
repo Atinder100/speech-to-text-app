@@ -11,8 +11,22 @@ const http = require('http')
 const { Server } = require('socket.io')
 const WebSocket = require('ws')
 
+
 const Transcription = require(
   './models/Transcription'
+)
+
+const bcrypt = require('bcryptjs')
+
+const jwt = require('jsonwebtoken')
+
+const authMiddleware =
+  require(
+    './middleware/authMiddleware'
+  )
+
+const User = require(
+  './models/User'
 )
 
 const app = express()
@@ -72,12 +86,219 @@ app.get('/', (req, res) => {
   )
 })
 
+app.use(express.json())
+
+// ======================
+// REGISTER USER
+// ======================
+
+app.post(
+  '/register',
+
+  async (req, res) => {
+
+    try {
+
+      const {
+        name,
+        email,
+        password,
+      } = req.body
+
+      // VALIDATIONS
+      if (
+        !name ||
+        !email ||
+        !password
+      ) {
+
+        return res
+          .status(400)
+          .json({
+            message:
+              'All fields are required',
+          })
+      }
+
+      // EMAIL CHECK
+      const existingUser =
+        await User.findOne({
+          email,
+        })
+
+      if (existingUser) {
+
+        return res
+          .status(400)
+          .json({
+            message:
+              'Email already exists',
+          })
+      }
+
+      // HASH PASSWORD
+      const hashedPassword =
+        await bcrypt.hash(
+          password,
+          10
+        )
+
+      // SAVE USER
+      const user =
+        await User.create({
+
+          name,
+
+          email,
+
+          password:
+            hashedPassword,
+        })
+
+      const token =
+  jwt.sign(
+
+    {
+      id: user._id,
+    },
+
+    process.env.JWT_SECRET,
+
+    {
+      expiresIn: '7d',
+    }
+  )
+
+res.status(201).json({
+
+  token,
+
+  user: {
+
+    id: user._id,
+
+    name: user.name,
+
+    email: user.email,
+  },
+})
+
+    } catch (error) {
+
+      console.log(error)
+
+      res.status(500).json({
+
+        message:
+          'Server error',
+      })
+    }
+  }
+)
+
+// ======================
+// LOGIN USER
+// ======================
+
+app.post(
+  '/login',
+
+  async (req, res) => {
+
+    try {
+
+      const {
+        email,
+        password,
+      } = req.body
+
+      // FIND USER
+      const user =
+        await User.findOne({
+          email,
+        })
+
+      // USER NOT FOUND
+      if (!user) {
+
+        return res
+          .status(400)
+          .json({
+
+            message:
+              'Invalid email or password',
+          })
+      }
+
+      // PASSWORD CHECK
+      const isMatch =
+        await bcrypt.compare(
+          password,
+          user.password
+        )
+
+      if (!isMatch) {
+
+        return res
+          .status(400)
+          .json({
+
+            message:
+              'Invalid email or password',
+          })
+      }
+
+      // SUCCESS
+      const token =
+  jwt.sign(
+
+    {
+      id: user._id,
+    },
+
+    process.env.JWT_SECRET,
+
+    {
+      expiresIn: '7d',
+    }
+  )
+
+res.status(200).json({
+
+  token,
+
+  user: {
+
+    id: user._id,
+
+    name: user.name,
+
+    email: user.email,
+  },
+})
+
+    } catch (error) {
+
+      console.log(error)
+
+      res.status(500).json({
+
+        message:
+          'Server error',
+      })
+    }
+  }
+)
+
 // ======================
 // FILE UPLOAD TRANSCRIPTION
 // ======================
 
 app.post(
   '/upload',
+
+   authMiddleware,
+
   upload.single('audio'),
 
   async (req, res) => {
@@ -124,6 +345,9 @@ app.post(
       // SAVE TO DATABASE
       await Transcription.create({
 
+        userId:
+          req.user,
+
         fileName:
           req.file.originalname,
 
@@ -160,13 +384,19 @@ app.post(
 app.get(
   '/transcriptions',
 
+  authMiddleware,
+
   async (req, res) => {
 
     try {
 
       const transcriptions =
         await Transcription
-          .find()
+          .find({
+
+            userId:
+              req.user,
+          })
           .sort({
             createdAt: -1,
           })
@@ -246,9 +476,42 @@ io.on(
       'User connected'
     )
 
+    socket.on(
+  'authenticate',
+
+  (token) => {
+
+    try {
+
+      const decoded =
+        jwt.verify(
+
+          token,
+
+          process.env.JWT_SECRET
+        )
+
+      userId =
+        decoded.id
+
+      console.log(
+        'Socket Authenticated'
+      )
+
+    } catch (error) {
+
+      console.log(
+        'Socket auth failed'
+      )
+    }
+  }
+)
+
     let deepgramLive = null
 
     let fullTranscript = ''
+
+    let userId = null
 
     // ======================
     // START STREAM
@@ -421,6 +684,8 @@ io.on(
           try {
 
             await Transcription.create({
+
+              userId,
 
               fileName:
                 'Live Mic',

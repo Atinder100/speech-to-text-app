@@ -4,6 +4,10 @@ import {
   useEffect,
 } from 'react'
 
+import {
+  Navigate,
+} from 'react-router-dom'
+
 import { io } from 'socket.io-client'
 
 import axios from 'axios'
@@ -39,12 +43,31 @@ function Dashboard() {
 
   const socketRef = useRef(null)
 
+  const token =
+  localStorage.getItem(
+    'token'
+  )
+
+  if (!token) {
+
+    return (
+      <Navigate to="/login" />
+    )
+  }
+
   // SOCKET + HISTORY
  useEffect(() => {
 
   // CREATE SOCKET CONNECTION
   socketRef.current =
     io('http://localhost:5000')
+
+    socketRef.current.emit(
+
+      'authenticate',
+
+      token
+    )
 
   // LIVE TRANSCRIPTION
   socketRef.current.on(
@@ -91,7 +114,17 @@ socketRef.current.on(
 
       const response =
         await axios.get(
-          'http://localhost:5000/transcriptions'
+
+          'http://localhost:5000/transcriptions',
+
+          {
+
+            headers: {
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
         )
 
       setHistory(response.data)
@@ -143,10 +176,21 @@ socketRef.current.on(
 
     // UPLOAD AUDIO
     const response =
-      await axios.post(
-        'http://localhost:5000/upload',
-        formData
-      )
+     await axios.post(
+
+          'http://localhost:5000/upload',
+
+          formData,
+
+          {
+
+            headers: {
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        )
 
     console.log(response.data)
 
@@ -271,7 +315,17 @@ socketRef.current.on(
 
         const response =
           await axios.get(
-            'http://localhost:5000/transcriptions'
+
+            'http://localhost:5000/transcriptions',
+
+            {
+
+              headers: {
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
           )
 
         setHistory(
@@ -291,7 +345,17 @@ socketRef.current.on(
     try {
 
       await axios.delete(
-        `http://localhost:5000/transcriptions/${id}`
+
+        `http://localhost:5000/transcriptions/${id}`,
+
+        {
+
+          headers: {
+
+            Authorization:
+              `Bearer ${token}`,
+          },
+        }
       )
 
       // REMOVE FROM UI
@@ -374,6 +438,29 @@ socketRef.current.on(
         >
 
           Upload File
+
+        </button>
+
+        <button
+
+          onClick={() => {
+
+            localStorage.removeItem(
+              'token'
+            )
+
+            localStorage.removeItem(
+              'user'
+            )
+
+            window.location.href =
+              '/login'
+          }}
+
+          className="px-6 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-semibold shadow-lg transition-all duration-300"
+        >
+
+          Logout
 
         </button>
 
