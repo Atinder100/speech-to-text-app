@@ -44,11 +44,24 @@ const PORT =
 // MULTER STORAGE
 // ======================
 
+const uploadPath = path.join(
+  __dirname,
+  'uploads'
+)
+
+// CREATE UPLOADS FOLDER
+if (!fs.existsSync(uploadPath)) {
+
+  fs.mkdirSync(uploadPath, {
+    recursive: true,
+  })
+}
+
 const storage = multer.diskStorage({
 
   destination: (req, file, cb) => {
 
-    cb(null, 'uploads/')
+    cb(null, uploadPath)
   },
 
   filename: (req, file, cb) => {
@@ -63,7 +76,9 @@ const storage = multer.diskStorage({
   },
 })
 
-const upload = multer({ storage })
+const upload = multer({
+  storage,
+})
 
 // ======================
 // MONGODB CONNECTION
@@ -311,10 +326,18 @@ app.post(
     try {
 
       // READ AUDIO FILE
-      const audioBuffer =
-        fs.readFileSync(
-          req.file.path
-        )
+      if (!req.file) {
+
+  return res.status(400).json({
+
+    error: 'No audio file uploaded',
+  })
+}
+
+const audioBuffer =
+  fs.readFileSync(
+    req.file.path
+  )
 
       // SEND TO DEEPGRAM
       const response =
@@ -332,6 +355,12 @@ app.post(
               'Content-Type':
                 req.file.mimetype,
             },
+           
+            timeout: 300000,
+
+            maxBodyLength: Infinity,
+            
+            maxContentLength: Infinity,
           }
         )
 
@@ -359,6 +388,14 @@ app.post(
         transcription:
           transcription,
       })
+
+      if (
+  req.file &&
+  fs.existsSync(req.file.path)
+) {
+
+  fs.unlinkSync(req.file.path)
+}
 
       // SEND RESPONSE
       res.status(200).json({

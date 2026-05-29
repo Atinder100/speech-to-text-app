@@ -38,6 +38,12 @@ function Dashboard() {
   const [history, setHistory] =
     useState([])
 
+  const [uploadSuccess, setUploadSuccess] =
+  useState('')
+
+  const [copiedId, setCopiedId] =
+  useState(null)
+
   const mediaRecorderRef =
     useRef(null)
 
@@ -173,6 +179,8 @@ socketRef.current.on(
 
     setLoading(true)
 
+    setUploadSuccess('')
+
     // UPLOAD AUDIO
     const response =
      await axios.post(
@@ -188,6 +196,8 @@ socketRef.current.on(
               Authorization:
                 `Bearer ${token}`,
             },
+
+            timeout: 120000,
           }
         )
 
@@ -201,18 +211,74 @@ socketRef.current.on(
     // FETCH UPDATED HISTORY
     const historyResponse =
       await axios.get(
-        'https://speech-to-text-backend-rayx.onrender.com/transcriptions'
+        'https://speech-to-text-backend-rayx.onrender.com/transcriptions',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+
+          timeout: 120000,
+        }
       )
 
-    setHistory(
-      historyResponse.data
-    )
+setHistory(historyResponse.data)
+
+setUploadSuccess(
+  'Transcription generated successfully. Check Audio Files section below.'
+)
+
+// AUTO CLOSE AFTER 5 SECONDS
+setTimeout(() => {
+
+  // HIDE UPLOAD BOX
+  document
+    .getElementById('uploadBox')
+    .classList.add('hidden')
+
+  // RESET AUDIO
+  setAudio(null)
+
+   // CLEAR FILE INPUT
+  document.getElementById(
+    'audioInput'
+  ).value = ''
+
+  // CLEAR SUCCESS MESSAGE
+  setUploadSuccess('')
+
+}, 5000)
 
   } catch (error) {
 
     console.log(error)
 
-    alert('Upload failed')
+    console.log(error)
+
+      console.log(
+  error.response?.data
+)
+
+console.log(error.message)
+
+if (
+  error.code === 'ECONNABORTED'
+) {
+
+  alert(
+    'Server is taking too long. Please wait and refresh page. Your transcription may already be saved.'
+  )
+
+} else {
+
+  alert(
+
+    error.response?.data?.error ||
+
+    error.message ||
+
+    'Upload failed'
+  )
+}
 
   } finally {
 
@@ -377,33 +443,38 @@ socketRef.current.on(
 
   return (
 
-<div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#1e293b] p-8">
+<div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#1e293b] px-3 sm:px-5 md:px-8 py-4 sm:py-8">
 
-  {/* MAIN DASHBOARD */}
-  <div className="max-w-6xl mx-auto bg-[#1e293b]/90 backdrop-blur-xl border border-slate-700 shadow-2xl rounded-3xl p-8">
+  {/* MAIN CONTAINER */}
+  <div className="max-w-7xl mx-auto bg-[#1e293b]/90 backdrop-blur-xl border border-slate-700 shadow-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8">
 
     {/* HEADER */}
-    <div className="flex items-center justify-between flex-wrap gap-4">
+    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
 
+      {/* TITLE */}
       <div>
 
-        <h1 className="text-5xl font-extrabold text-slate-100 tracking-tight">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-100 tracking-tight break-words">
+
           Dashboard
+
         </h1>
 
-        <p className="text-slate-400 mt-2 text-lg">
+        <p className="text-slate-400 mt-2 text-sm sm:text-base md:text-lg">
+
           Speech To Text Transcription System
+
         </p>
 
       </div>
 
       {/* ACTION BUTTONS */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
 
         {/* MIC BUTTON */}
         <button
           onClick={toggleMic}
-          className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-xl transition-all duration-300 hover:scale-110 ${
+          className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-xl sm:text-2xl shadow-xl transition-all duration-300 hover:scale-105 ${
             micOn
               ? 'bg-gradient-to-r from-rose-500 to-red-600 text-white animate-pulse'
               : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white'
@@ -425,38 +496,30 @@ socketRef.current.on(
             setMicOn(false)
 
             document
-              .getElementById(
-                'uploadBox'
-              )
-              .classList.remove(
-                'hidden'
-              )
+              .getElementById('uploadBox')
+              .classList.remove('hidden')
           }}
-
-          className="px-7 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300"
+          className="px-5 sm:px-7 py-3 sm:py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold text-sm sm:text-base shadow-xl hover:scale-105 transition-all duration-300"
         >
 
           Upload File
 
         </button>
 
+        {/* LOGOUT */}
         <button
 
           onClick={() => {
 
-            localStorage.removeItem(
-              'token'
-            )
+            localStorage.removeItem('token')
 
-            localStorage.removeItem(
-              'user'
-            )
+            localStorage.removeItem('user')
 
             window.location.href =
               '/login'
           }}
 
-          className="px-6 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-semibold shadow-lg transition-all duration-300"
+          className="px-5 sm:px-6 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white text-sm sm:text-base font-semibold shadow-lg transition-all duration-300"
         >
 
           Logout
@@ -467,20 +530,18 @@ socketRef.current.on(
 
     </div>
 
-    {/* ========================= */}
-    {/* MIC RECORDING BOX */}
-    {/* ========================= */}
-
+    {/* RECORDING BOX */}
     {micOn && (
 
-      <div className="mt-10 bg-slate-900 border border-slate-700 shadow-2xl rounded-3xl p-8 max-w-2xl animate-pulse">
+      <div className="mt-8 sm:mt-10 bg-slate-900 border border-slate-700 shadow-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-8 w-full">
 
-        <h2 className="text-3xl font-bold text-slate-100 mb-6">
+        <h2 className="text-2xl sm:text-3xl font-bold text-slate-100 mb-5">
+
           Speak Now
+
         </h2>
 
-        {/* RECORDING DISPLAY */}
-        <div className="min-h-[180px] bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-6 text-xl text-slate-200 leading-relaxed shadow-inner">
+        <div className="min-h-[160px] sm:min-h-[180px] bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-4 sm:p-6 text-base sm:text-lg md:text-xl text-slate-200 leading-relaxed shadow-inner break-words">
 
           {
             transcription ||
@@ -489,12 +550,11 @@ socketRef.current.on(
 
         </div>
 
-        {/* STOP BUTTON */}
-        <div className="mt-8 flex justify-center">
+        <div className="mt-6 sm:mt-8 flex justify-center">
 
           <button
             onClick={toggleMic}
-            className="px-8 py-4 rounded-2xl bg-gradient-to-r from-rose-500 to-red-600 text-white font-semibold shadow-lg hover:scale-105 transition-all duration-300"
+            className="px-6 sm:px-8 py-3 sm:py-4 rounded-2xl bg-gradient-to-r from-rose-500 to-red-600 text-white text-sm sm:text-base font-semibold shadow-lg hover:scale-105 transition-all duration-300"
           >
 
             Stop Recording
@@ -506,23 +566,22 @@ socketRef.current.on(
       </div>
     )}
 
-    {/* ========================= */}
     {/* UPLOAD BOX */}
-    {/* ========================= */}
-
     <div
       id="uploadBox"
-      className="hidden mt-10 bg-slate-900 border border-slate-700 shadow-2xl rounded-3xl p-8 max-w-2xl"
+      className="hidden mt-8 sm:mt-10 bg-slate-900 border border-slate-700 shadow-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-8 w-full"
     >
 
-      <h2 className="text-3xl font-bold text-slate-100 mb-6">
+      <h2 className="text-2xl sm:text-3xl font-bold text-slate-100 mb-6">
+
         Upload Audio File
+
       </h2>
 
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col gap-4">
 
-        {/* FILE INPUT */}
         <input
+          id="audioInput"
           type="file"
           accept="audio/*"
           onChange={(e) =>
@@ -530,15 +589,14 @@ socketRef.current.on(
               e.target.files[0]
             )
           }
-          className="flex-1 border border-slate-700 rounded-2xl p-4 bg-slate-800 text-slate-200 focus:outline-none focus:ring-4 focus:ring-cyan-500"
+          className="w-full border border-slate-700 rounded-2xl p-4 bg-slate-800 text-slate-200 focus:outline-none focus:ring-4 focus:ring-cyan-500"
         />
 
-        {/* UPLOAD BUTTON */}
         <button
           onClick={() =>
             handleUpload(audio)
           }
-          className="px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold shadow-lg hover:scale-105 transition-all duration-300"
+          className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold shadow-lg hover:scale-105 transition-all duration-300"
         >
 
           {
@@ -549,19 +607,36 @@ socketRef.current.on(
 
         </button>
 
+        {/* SUCCESS MESSAGE */}
+        {uploadSuccess && (
+
+          <div className="mt-5 bg-green-500/10 border border-green-500/30 rounded-2xl p-4">
+
+            <p className="text-green-400 text-sm sm:text-base font-medium">
+
+              {uploadSuccess}
+
+            </p>
+
+          </div>
+        )}
+
       </div>
 
-      {/* FILE NAME */}
       {audio && (
 
-        <div className="mt-6 bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-5 shadow-sm">
+        <div className="mt-6 bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-5 shadow-sm break-words">
 
           <p className="font-semibold text-slate-200">
+
             Uploaded File
+
           </p>
 
-          <p className="mt-2 text-slate-400">
+          <p className="mt-2 text-slate-400 break-all">
+
             {audio.name}
+
           </p>
 
         </div>
@@ -569,25 +644,19 @@ socketRef.current.on(
 
     </div>
 
-    {/* ========================= */}
-    {/* PREVIOUS TRANSCRIPTIONS */}
-    {/* ========================= */}
+    {/* HISTORY */}
+    <div className="mt-12">
 
-    <div className="mt-14">
-
-      <h2 className="text-4xl font-bold text-slate-100 mb-8">
+      <h2 className="text-3xl sm:text-4xl font-bold text-slate-100 mb-8 leading-tight">
 
         Your Previous Transcriptions
 
       </h2>
 
-      {/* ========================= */}
       {/* MIC RECORDINGS */}
-      {/* ========================= */}
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-8 mb-8">
 
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl p-8 mb-10">
-
-        <h3 className="text-3xl font-bold text-slate-100 mb-8">
+        <h3 className="text-2xl sm:text-3xl font-bold text-slate-100 mb-6">
 
           Recordings from Mic
 
@@ -605,22 +674,26 @@ socketRef.current.on(
 
               <div
                 key={item._id}
-                className="bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-6 flex flex-col lg:flex-row justify-between gap-6 shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+                className="bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-4 sm:p-6 shadow-md hover:shadow-2xl transition-all duration-300"
               >
 
-                <div className="flex-1">
+                <div>
 
-                  <p className="font-bold text-xl text-slate-100">
+                  <p className="font-bold text-lg sm:text-xl text-slate-100">
+
                     Live Mic Recording
+
                   </p>
 
-                  <p className="mt-4 text-slate-300 text-lg leading-relaxed">
+                  <p className="mt-4 text-slate-300 text-sm sm:text-base md:text-lg leading-relaxed break-words">
+
                     {
                       item.transcription
                     }
+
                   </p>
 
-                  <p className="text-sm text-slate-500 mt-5">
+                  <p className="text-xs sm:text-sm text-slate-500 mt-5">
 
                     {
                       new Date(
@@ -633,28 +706,48 @@ socketRef.current.on(
                 </div>
 
                 {/* BUTTONS */}
-                <div className="flex gap-2 ml-4">
+                <div className="flex flex-wrap gap-3 mt-6">
 
-                  {/* COPY */}
                   <button
-                    onClick={() =>
+                    onClick={() => {
+
                       navigator.clipboard.writeText(
                         item.transcription
                       )
-                    }
-                    className="bg-slate-600 hover:bg-slate-700 text-white text-xs px-4 h-8 rounded-md transition duration-300 shadow-sm"
+
+                      setCopiedId(item._id)
+
+                      setTimeout(() => {
+
+                        setCopiedId(null)
+
+                      }, 2000)
+                    }}
+                    className="flex-1 sm:flex-none bg-slate-600 hover:bg-slate-700 text-white text-sm px-5 py-2 rounded-lg transition duration-300"
                   >
-                    Copy
+                    {
+                      copiedId === item._id
+                        ? 'Copied'
+                        : 'Copy'
+                    }
                   </button>
 
-                  {/* DELETE */}
                   <button
-                    onClick={() =>
-                      deleteTranscription(
-                        item._id
-                      )
-                    }
-                    className="bg-rose-500 hover:bg-rose-600 text-white text-xs px-4 h-8 rounded-md transition duration-300 shadow-sm"
+                    onClick={() => {
+
+                      const confirmDelete =
+                        window.confirm(
+                          'Are you sure you want to delete this transcription?'
+                        )
+
+                      if (confirmDelete) {
+
+                        deleteTranscription(
+                          item._id
+                        )
+                      }
+                    }}
+                    className="flex-1 sm:flex-none bg-rose-500 hover:bg-rose-600 text-white text-sm px-5 py-2 rounded-lg transition duration-300"
                   >
                     Delete
                   </button>
@@ -668,13 +761,10 @@ socketRef.current.on(
 
       </div>
 
-      {/* ========================= */}
       {/* AUDIO FILES */}
-      {/* ========================= */}
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-8">
 
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl p-8">
-
-        <h3 className="text-3xl font-bold text-slate-100 mb-8">
+        <h3 className="text-2xl sm:text-3xl font-bold text-slate-100 mb-6">
 
           Audio Files
 
@@ -692,18 +782,18 @@ socketRef.current.on(
 
               <div
                 key={item._id}
-                className="bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-6 flex flex-col lg:flex-row justify-between gap-6 shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+                className="bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-4 sm:p-6 shadow-md hover:shadow-2xl transition-all duration-300"
               >
 
-                <div className="flex-1">
+                <div>
 
-                  <p className="font-bold text-xl text-slate-100">
+                  <p className="font-bold text-lg sm:text-xl text-slate-100 break-all">
 
                     {item.fileName}
 
                   </p>
 
-                  <p className="mt-4 text-slate-300 text-lg leading-relaxed">
+                  <p className="mt-4 text-slate-300 text-sm sm:text-base md:text-lg leading-relaxed break-words">
 
                     {
                       item.transcription
@@ -711,7 +801,7 @@ socketRef.current.on(
 
                   </p>
 
-                  <p className="text-sm text-slate-500 mt-5">
+                  <p className="text-xs sm:text-sm text-slate-500 mt-5">
 
                     {
                       new Date(
@@ -723,34 +813,31 @@ socketRef.current.on(
 
                 </div>
 
-                {/* BUTTONS */}
-                <div className="flex gap-2 ml-4">
+                <div className="flex flex-wrap gap-3 mt-6">
 
-                    {/* COPY */}
-                    <button
-                      onClick={() =>
-                        navigator.clipboard.writeText(
-                          item.transcription
-                        )
-                      }
-                      className="bg-slate-600 hover:bg-slate-700 text-white text-xs px-4 h-8 rounded-md transition duration-300 shadow-sm"
-                    >
-                      Copy
-                    </button>
+                  <button
+                    onClick={() =>
+                      navigator.clipboard.writeText(
+                        item.transcription
+                      )
+                    }
+                    className="flex-1 sm:flex-none bg-slate-600 hover:bg-slate-700 text-white text-sm px-5 py-2 rounded-lg transition duration-300"
+                  >
+                    Copy
+                  </button>
 
-                    {/* DELETE */}
-                    <button
-                      onClick={() =>
-                        deleteTranscription(
-                          item._id
-                        )
-                      }
-                      className="bg-rose-500 hover:bg-rose-600 text-white text-xs px-4 h-8 rounded-md transition duration-300 shadow-sm"
-                    >
-                      Delete
-                    </button>
+                  <button
+                    onClick={() =>
+                      deleteTranscription(
+                        item._id
+                      )
+                    }
+                    className="flex-1 sm:flex-none bg-rose-500 hover:bg-rose-600 text-white text-sm px-5 py-2 rounded-lg transition duration-300"
+                  >
+                    Delete
+                  </button>
 
-                  </div>
+                </div>
 
               </div>
             ))}

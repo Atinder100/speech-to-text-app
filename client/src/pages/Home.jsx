@@ -4,36 +4,39 @@ function Home() {
 
   return (
 
-    <div className="min-h-screen bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#111827] text-white">
+    <div className="min-h-screen bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#111827] text-white overflow-x-hidden">
 
       {/* NAVBAR */}
       <nav className="sticky top-0 z-50 backdrop-blur-xl bg-[#020617]/80 border-b border-slate-800">
 
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-8 py-5">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
 
           {/* LOGO */}
-          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+
             WebScribe AI
+
           </h1>
 
           {/* NAV LINKS */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
 
-            <button className="px-5 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition">
+            <button className="hidden sm:block px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition">
 
               Home
 
             </button>
 
-            <button className="px-5 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition">
+            <button className="hidden md:block px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition">
 
               FAQs
 
             </button>
 
+            {/* LOGIN BUTTON */}
             <Link
               to="/login"
-              className="px-6 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:scale-105 transition shadow-lg"
+              className="px-4 sm:px-6 py-2 rounded-xl border border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-white transition-all duration-300 shadow-lg"
             >
 
               Log In
@@ -47,18 +50,18 @@ function Home() {
       </nav>
 
       {/* HERO SECTION */}
-      <section className="max-w-7xl mx-auto px-8 py-28 flex flex-col lg:flex-row items-center justify-between gap-20">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 flex flex-col lg:flex-row items-center justify-between gap-14">
 
         {/* LEFT */}
-        <div className="flex-1">
+        <div className="flex-1 text-center lg:text-left">
 
-          <p className="uppercase tracking-[0.3em] text-cyan-400 font-semibold mb-6">
+          <p className="uppercase tracking-[0.25em] text-cyan-400 font-semibold mb-6 text-xs sm:text-sm">
 
             AI Powered Speech Recognition
 
           </p>
 
-          <h1 className="text-6xl lg:text-7xl font-extrabold leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight">
 
             Want to Convert
 
@@ -70,7 +73,7 @@ function Home() {
 
           </h1>
 
-          <p className="mt-8 text-xl text-slate-400 leading-relaxed max-w-2xl">
+          <p className="mt-6 sm:mt-8 text-base sm:text-lg lg:text-xl text-slate-400 leading-relaxed max-w-2xl mx-auto lg:mx-0">
 
             WebScribe AI helps you instantly transform
             meetings, podcasts, interviews, and voice
@@ -79,11 +82,11 @@ function Home() {
           </p>
 
           {/* BUTTON */}
-          <div className="mt-12">
+          <div className="mt-10">
 
             <Link
               to="/register"
-              className="inline-block px-10 py-5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-lg shadow-2xl hover:scale-105 transition-all duration-300"
+              className="inline-block px-8 sm:px-10 py-4 sm:py-5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-base sm:text-lg shadow-2xl hover:scale-105 transition-all duration-300"
             >
 
               Convert Now
@@ -95,21 +98,21 @@ function Home() {
         </div>
 
         {/* RIGHT CARD */}
-        <div className="flex-1 flex justify-center">
+        <div className="flex-1 flex justify-center w-full">
 
-          <div className="w-full max-w-lg bg-[#1e293b]/70 border border-slate-700 rounded-3xl p-10 backdrop-blur-xl shadow-2xl">
+          <div className="w-full max-w-md sm:max-w-lg bg-[#1e293b]/70 border border-slate-700 rounded-3xl p-6 sm:p-10 backdrop-blur-xl shadow-2xl">
 
-            <div className="space-y-6">
+            <div className="space-y-5">
 
               <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700">
 
-                <p className="text-cyan-400 font-semibold mb-2">
+                <p className="text-cyan-400 font-semibold mb-2 text-lg">
 
                   Live Transcription
 
                 </p>
 
-                <p className="text-slate-300">
+                <p className="text-slate-300 text-sm sm:text-base">
 
                   Convert live speech into text instantly.
 
@@ -119,13 +122,13 @@ function Home() {
 
               <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700">
 
-                <p className="text-cyan-400 font-semibold mb-2">
+                <p className="text-cyan-400 font-semibold mb-2 text-lg">
 
                   Upload Audio Files
 
                 </p>
 
-                <p className="text-slate-300">
+                <p className="text-slate-300 text-sm sm:text-base">
 
                   Upload recordings and generate transcripts.
 
@@ -135,13 +138,13 @@ function Home() {
 
               <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700">
 
-                <p className="text-cyan-400 font-semibold mb-2">
+                <p className="text-cyan-400 font-semibold mb-2 text-lg">
 
                   Save & Manage
 
                 </p>
 
-                <p className="text-slate-300">
+                <p className="text-slate-300 text-sm sm:text-base">
 
                   Copy and manage previous transcriptions.
 
@@ -157,28 +160,28 @@ function Home() {
 
       </section>
 
-      {/* WHAT THIS TOOL DOES */}
-      <section className="max-w-7xl mx-auto px-8 pb-28">
+      {/* FEATURES SECTION */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 sm:pb-28">
 
-        <div className="bg-[#1e293b]/70 border border-slate-700 rounded-3xl p-12 shadow-2xl">
+        <div className="bg-[#1e293b]/70 border border-slate-700 rounded-3xl p-6 sm:p-10 lg:p-12 shadow-2xl">
 
-          <h2 className="text-5xl font-extrabold mb-10">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-10 text-center lg:text-left">
 
             What This Tool Does
 
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
 
-            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-8">
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 sm:p-8">
 
-              <h3 className="text-2xl font-bold text-cyan-400 mb-4">
+              <h3 className="text-xl sm:text-2xl font-bold text-cyan-400 mb-4">
 
                 Speech Recognition
 
               </h3>
 
-              <p className="text-slate-400 leading-relaxed">
+              <p className="text-slate-400 leading-relaxed text-sm sm:text-base">
 
                 Converts speech into accurate text using AI.
 
@@ -186,15 +189,15 @@ function Home() {
 
             </div>
 
-            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-8">
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 sm:p-8">
 
-              <h3 className="text-2xl font-bold text-cyan-400 mb-4">
+              <h3 className="text-xl sm:text-2xl font-bold text-cyan-400 mb-4">
 
                 Audio Uploads
 
               </h3>
 
-              <p className="text-slate-400 leading-relaxed">
+              <p className="text-slate-400 leading-relaxed text-sm sm:text-base">
 
                 Upload audio files and generate transcripts instantly.
 
@@ -202,15 +205,15 @@ function Home() {
 
             </div>
 
-            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-8">
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 sm:p-8">
 
-              <h3 className="text-2xl font-bold text-cyan-400 mb-4">
+              <h3 className="text-xl sm:text-2xl font-bold text-cyan-400 mb-4">
 
                 Live Recording
 
               </h3>
 
-              <p className="text-slate-400 leading-relaxed">
+              <p className="text-slate-400 leading-relaxed text-sm sm:text-base">
 
                 Record audio live and get real-time captions.
 

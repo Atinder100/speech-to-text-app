@@ -24,6 +24,9 @@ function Login() {
   const [error, setError] =
     useState('')
 
+  const [loading, setLoading] =
+    useState(false)
+
   const handleChange = (e) => {
 
     setFormData({
@@ -44,6 +47,8 @@ function Login() {
 
       try {
 
+        setLoading(true)
+
         const response =
           await axios.post(
             'https://speech-to-text-backend-rayx.onrender.com/login',
@@ -52,24 +57,18 @@ function Login() {
           )
 
         localStorage.setItem(
+          'token',
+          response.data.token
+        )
 
-  'token',
+        localStorage.setItem(
+          'user',
+          JSON.stringify(
+            response.data.user
+          )
+        )
 
-  response.data.token
-)
-
-localStorage.setItem(
-
-  'user',
-
-  JSON.stringify(
-    response.data.user
-  )
-)
-
-navigate(
-  '/dashboard'
-)
+        navigate('/dashboard')
 
       } catch (error) {
 
@@ -78,79 +77,104 @@ navigate(
             ?.message ||
             'Login failed'
         )
+
+      } finally {
+
+        setLoading(false)
       }
     }
 
   return (
 
-    <div className="min-h-screen bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#111827] flex items-center justify-center p-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#111827] flex items-center justify-center px-4 py-8">
 
-      <div className="w-full max-w-lg bg-[#1e293b]/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-10 shadow-2xl">
+      <div className="w-full max-w-md sm:max-w-lg bg-[#1e293b]/80 backdrop-blur-xl border border-slate-700 rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-10 shadow-2xl">
 
-        <h1 className="text-5xl font-extrabold text-white mb-3">
+        {/* TITLE */}
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-3 leading-tight">
 
           Welcome Back
 
         </h1>
 
-        <p className="text-slate-400 mb-10">
+        <p className="text-slate-400 mb-8 sm:mb-10 text-sm sm:text-base leading-relaxed">
 
           Login to continue using WebScribe.
 
         </p>
 
+        {/* FORM */}
         <form
-          onSubmit={
-            handleSubmit
-          }
-          className="space-y-6"
+          onSubmit={handleSubmit}
+          className="space-y-5 sm:space-y-6"
         >
 
           {/* EMAIL */}
-          <input
-            type="email"
-            name="email"
-            placeholder="Email Address"
-            value={
-              formData.email
-            }
-            onChange={
-              handleChange
-            }
-            className="w-full p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:ring-4 focus:ring-cyan-500"
-          />
+          <div>
+
+            <label className="block text-slate-300 text-sm mb-2">
+
+              Email Address
+
+            </label>
+
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-900 border border-slate-700 text-white text-sm sm:text-base placeholder:text-slate-500 focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-cyan-500 transition"
+            />
+
+          </div>
 
           {/* PASSWORD */}
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={
-              formData.password
-            }
-            onChange={
-              handleChange
-            }
-            className="w-full p-4 rounded-2xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:ring-4 focus:ring-cyan-500"
-          />
+          <div>
+
+            <label className="block text-slate-300 text-sm mb-2">
+
+              Password
+
+            </label>
+
+            <input
+              type="password"
+              name="password"
+              placeholder="Enter your password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-900 border border-slate-700 text-white text-sm sm:text-base placeholder:text-slate-500 focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-cyan-500 transition"
+            />
+
+          </div>
 
           {/* ERROR */}
           {error && (
 
-            <p className="text-red-400">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3">
 
-              {error}
+              <p className="text-red-400 text-sm">
 
-            </p>
+                {error}
+
+              </p>
+
+            </div>
           )}
 
-          {/* LOGIN BUTTON */}
+          {/* BUTTON */}
           <button
             type="submit"
-            className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-lg shadow-xl hover:scale-105 transition-all duration-300"
+            disabled={loading}
+            className="w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-sm sm:text-lg shadow-xl hover:scale-[1.02] transition-all duration-300 disabled:opacity-70"
           >
 
-            Log In
+            {
+              loading
+                ? 'Logging In...'
+                : 'Log In'
+            }
 
           </button>
 
@@ -159,7 +183,7 @@ navigate(
         {/* REGISTER LINK */}
         <div className="mt-8 text-center">
 
-          <p className="text-slate-400">
+          <p className="text-slate-400 text-sm sm:text-base">
 
             Don't have an account?
 
