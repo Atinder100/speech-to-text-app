@@ -60,8 +60,7 @@ function Dashboard() {
 
   // CREATE SOCKET CONNECTION
   socketRef.current =
-    io('http://localhost:5000')
-
+    io('https://speech-to-text-backend-rayx.onrender.com')
     socketRef.current.emit(
 
       'authenticate',
@@ -115,7 +114,7 @@ socketRef.current.on(
       const response =
         await axios.get(
 
-          'http://localhost:5000/transcriptions',
+          'https://speech-to-text-backend-rayx.onrender.com/transcriptions',
 
           {
 
@@ -178,7 +177,7 @@ socketRef.current.on(
     const response =
      await axios.post(
 
-          'http://localhost:5000/upload',
+          'https://speech-to-text-backend-rayx.onrender.com/upload',
 
           formData,
 
@@ -202,7 +201,7 @@ socketRef.current.on(
     // FETCH UPDATED HISTORY
     const historyResponse =
       await axios.get(
-        'http://localhost:5000/transcriptions'
+        'https://speech-to-text-backend-rayx.onrender.com/transcriptions'
       )
 
     setHistory(
@@ -316,7 +315,7 @@ socketRef.current.on(
         const response =
           await axios.get(
 
-            'http://localhost:5000/transcriptions',
+            'https://speech-to-text-backend-rayx.onrender.com/transcriptions',
 
             {
 
@@ -346,7 +345,7 @@ socketRef.current.on(
 
       await axios.delete(
 
-        `http://localhost:5000/transcriptions/${id}`,
+        `https://speech-to-text-backend-rayx.onrender.com/transcriptions/${id}`,
 
         {
 

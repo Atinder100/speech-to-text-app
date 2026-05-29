@@ -86,7 +86,7 @@ function Register() {
 
         const response =
           await axios.post(
-            'http://localhost:5000/register',
+            'https://speech-to-text-backend-rayx.onrender.com/register',
 
             formData
           )
