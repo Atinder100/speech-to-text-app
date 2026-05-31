@@ -31,6 +31,12 @@ function Register() {
   const [loading, setLoading] =
     useState(false)
 
+  const [otp, setOtp] =
+    useState('')
+
+  const [otpSent, setOtpSent] =
+    useState(false)
+
   const handleChange = (e) => {
 
     setFormData({
@@ -41,6 +47,34 @@ function Register() {
         e.target.value,
     })
   }
+
+  const sendOtp = async () => {
+
+      try {
+
+        await axios.post(
+
+          'https://speech-to-text-backend-rayx.onrender.com/send-otp',
+
+          {
+            email: formData.email,
+          }
+        )
+
+        setOtpSent(true)
+
+        setSuccess(
+          'OTP sent successfully'
+        )
+
+      } catch (error) {
+
+        setError(
+          error.response?.data?.message ||
+          'Failed to send OTP'
+        )
+      }
+    }
 
   const handleSubmit =
     async (e) => {
@@ -89,32 +123,24 @@ function Register() {
         const response =
           await axios.post(
             'https://speech-to-text-backend-rayx.onrender.com/register',
-
-            formData
+            {
+              ...formData,
+              otp,
+            }
           )
 
         setSuccess(
-          response.data.message
+          'Registration successful'
         )
 
-        setTimeout(() => {
-
-          localStorage.setItem(
-            'token',
-            response.data.token
-          )
-
-          localStorage.setItem(
-            'user',
-
-            JSON.stringify(
-              response.data.user
-            )
-          )
-
-          navigate('/dashboard')
-
-        }, 1500)
+        navigate(
+          '/login',
+          {
+            state: {
+              email: formData.email,
+            },
+          }
+        )
 
       } catch (error) {
 
@@ -195,8 +221,39 @@ function Register() {
 
           </div>
 
+          <div>
+
+            <label className="block text-slate-300 text-sm mb-2">
+
+              OTP
+
+            </label>
+
+            <input
+              type="text"
+              placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) =>
+                setOtp(e.target.value)
+              }
+              className="w-full p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-900 border border-slate-700 text-white"
+            />
+
+          </div>
+
+          <button
+            type="button"
+            onClick={sendOtp}
+            className="w-full py-3 rounded-xl bg-yellow-500 text-black font-bold"
+          >
+
+            Send OTP
+
+          </button>
+
           {/* PASSWORD */}
           <div>
+            
 
             <label className="block text-slate-300 text-sm mb-2">
 
@@ -214,6 +271,8 @@ function Register() {
             />
 
           </div>
+
+          
 
           {/* ERROR */}
           {error && (

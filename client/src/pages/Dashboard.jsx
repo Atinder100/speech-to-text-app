@@ -19,6 +19,8 @@ import {
 
 
 
+
+
 function Dashboard() {
 
   
@@ -441,6 +443,20 @@ if (
     }
   }
 
+  const micRecordings =
+  history.filter(
+    (item) =>
+      item.fileName ===
+      'Live Mic'
+  )
+
+const audioFiles =
+  history.filter(
+    (item) =>
+      item.fileName !==
+      'Live Mic'
+  )
+
   return (
 
 <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#1e293b] px-3 sm:px-5 md:px-8 py-4 sm:py-8">
@@ -664,13 +680,27 @@ if (
 
         <div className="space-y-5">
 
-          {history
-            .filter(
-              (item) =>
-                item.fileName ===
-                'Live Mic'
-            )
-            .map((item) => (
+  {micRecordings.length === 0 ? (
+
+    <div className="text-center py-12">
+
+      <p className="text-slate-400 text-lg">
+
+        No microphone recordings yet.
+
+      </p>
+
+      <p className="text-slate-500 mt-2">
+
+        Click the microphone button above to create your first recording.
+
+      </p>
+
+    </div>
+
+  ) : (
+
+    micRecordings.map((item) => (
 
               <div
                 key={item._id}
@@ -755,7 +785,8 @@ if (
                 </div>
 
               </div>
-            ))}
+            ))
+          )}
 
         </div>
 
@@ -772,13 +803,28 @@ if (
 
         <div className="space-y-5">
 
-          {history
-            .filter(
-              (item) =>
-                item.fileName !==
-                'Live Mic'
-            )
-            .map((item) => (
+
+  {audioFiles.length === 0 ? (
+
+    <div className="text-center py-12">
+
+      <p className="text-slate-400 text-lg">
+
+        No uploaded audio files yet.
+
+      </p>
+
+      <p className="text-slate-500 mt-2">
+
+        Upload an audio file to generate your first transcription.
+
+      </p>
+
+    </div>
+
+  ) : (
+
+    audioFiles.map((item) => (
 
               <div
                 key={item._id}
@@ -816,22 +862,44 @@ if (
                 <div className="flex flex-wrap gap-3 mt-6">
 
                   <button
-                    onClick={() =>
+                    onClick={() => {
+
                       navigator.clipboard.writeText(
                         item.transcription
                       )
-                    }
+
+                      setCopiedId(item._id)
+
+                      setTimeout(() => {
+
+                        setCopiedId(null)
+
+                      }, 2000)
+                    }}
                     className="flex-1 sm:flex-none bg-slate-600 hover:bg-slate-700 text-white text-sm px-5 py-2 rounded-lg transition duration-300"
                   >
-                    Copy
+                    {
+                      copiedId === item._id
+                        ? 'Copied'
+                        : 'Copy'
+                    }
                   </button>
 
                   <button
-                    onClick={() =>
-                      deleteTranscription(
-                        item._id
-                      )
-                    }
+                  onClick={() => {
+
+                      const confirmDelete =
+                        window.confirm(
+                          'Are you sure you want to delete this transcription?'
+                        )
+
+                      if (confirmDelete) {
+
+                        deleteTranscription(
+                          item._id
+                        )
+                      }
+                    }}
                     className="flex-1 sm:flex-none bg-rose-500 hover:bg-rose-600 text-white text-sm px-5 py-2 rounded-lg transition duration-300"
                   >
                     Delete
@@ -840,7 +908,8 @@ if (
                 </div>
 
               </div>
-            ))}
+            ))
+          )}
 
         </div>
 

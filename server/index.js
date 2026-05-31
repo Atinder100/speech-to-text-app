@@ -29,6 +29,13 @@ const User = require(
   './models/User'
 )
 
+const Otp = require(
+  './models/Otp'
+)
+
+const nodemailer =
+  require('nodemailer')
+
 const app = express()
 
 app.use(
@@ -108,6 +115,81 @@ app.get('/', (req, res) => {
 
 app.use(express.json())
 
+const transporter =
+  nodemailer.createTransport({
+
+    service: 'gmail',
+
+    auth: {
+
+      user:
+        process.env.EMAIL_USER,
+
+      pass:
+        process.env.EMAIL_PASS,
+    },
+  })
+
+  app.post(
+  '/send-otp',
+
+  async (req, res) => {
+
+    try {
+
+      const { email } =
+        req.body
+
+      const otp =
+        Math.floor(
+          100000 +
+          Math.random() * 900000
+        ).toString()
+
+      await Otp.deleteMany({
+        email,
+      })
+
+      await Otp.create({
+
+        email,
+
+        otp,
+      })
+
+      await transporter.sendMail({
+
+        from:
+          process.env.EMAIL_USER,
+
+        to: email,
+
+        subject:
+          'Email Verification OTP',
+
+        text:
+          `Your OTP is ${otp}`,
+      })
+
+      res.status(200).json({
+
+        message:
+          'OTP sent successfully',
+      })
+
+    } catch (error) {
+
+      console.log(error)
+
+      res.status(500).json({
+
+        message:
+          'Failed to send OTP',
+      })
+    }
+  }
+)
+
 // ======================
 // REGISTER USER
 // ======================
@@ -123,6 +205,7 @@ app.post(
         name,
         email,
         password,
+        otp,
       } = req.body
 
       // VALIDATIONS
@@ -156,6 +239,25 @@ app.post(
           })
       }
 
+      const savedOtp =
+        await Otp.findOne({
+          email,
+        })
+
+      if (
+        !savedOtp ||
+        savedOtp.otp !== otp
+      ) {
+
+        return res
+          .status(400)
+          .json({
+
+            message:
+              'Invalid OTP',
+          })
+      }
+
       // HASH PASSWORD
       const hashedPassword =
         await bcrypt.hash(
@@ -173,6 +275,12 @@ app.post(
 
           password:
             hashedPassword,
+
+             isVerified: true,
+        })
+
+        await Otp.deleteMany({
+          email,
         })
 
       const token =
@@ -462,14 +570,18 @@ app.get(
 
 app.delete(
   '/transcriptions/:id',
+   
+  authMiddleware,
 
   async (req, res) => {
 
     try {
 
-      await Transcription.findByIdAndDelete(
-        req.params.id
-      )
+      const transcription =
+        await Transcription.findOneAndDelete({
+          _id: req.params.id,
+          userId: req.user,
+        })
 
       res.status(200).json({
 
