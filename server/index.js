@@ -161,19 +161,21 @@ const transporter =
         otp,
       })
 
-      await transporter.sendMail({
+      await Otp.create({ email, otp });
 
-        from:
-          process.env.EMAIL_USER,
+        try {
+          await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Email Verification OTP',
+            text: `Your OTP is ${otp}`,
+          });
 
-        to: email,
-
-        subject:
-          'Email Verification OTP',
-
-        text:
-          `Your OTP is ${otp}`,
-      })
+          console.log("OTP email sent successfully");
+        } catch (err) {
+          console.log("EMAIL ERROR:", err);
+        }
+      
 
       res.status(200).json({
 
