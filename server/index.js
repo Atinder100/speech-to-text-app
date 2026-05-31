@@ -131,15 +131,19 @@ const transporter =
   })
 
   app.post(
-  '/send-otp',
+    '/send-otp',
 
-  async (req, res) => {
+    async (req, res) => {
 
-    try {
+      console.log("SEND OTP ROUTE HIT")
 
-      const { email } =
-        req.body
+      try {
 
+        console.log(req.body)
+
+        const { email } =
+          req.body
+          
       const otp =
         Math.floor(
           100000 +
